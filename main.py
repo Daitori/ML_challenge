@@ -11,7 +11,9 @@ data=pd.read_csv(r"Challenge\training_data.csv",sep=",") ##Change localisation d
 ##J'avais des resultats de pred faible - de 0.5, j'ai tenté de faire similaire
 #https://stackoverflow.com/questions/39167586/scikit-very-low-accuracy-on-classifiersnaive-bayes-decissiontreeclassifier
 
-Y=data.iloc[:,1].astype(int) ##Val de 1 à 8 avec 1286 valeurs
+Y=data.iloc[:,1].astype(int) 
+##Val [1 2 3 5 6 7 8] avec 1286 valeurs totals
+#[1:173;2:171;3:194;5:198;6:181;7:189;8:180] +- équilibré la répartion des classes
 
 ##Plus précis de normaliser les X et les Y à part
 Coordinate_X=sk.preprocessing.normalize(data.iloc[:,4:72,])
