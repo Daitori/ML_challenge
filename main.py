@@ -49,7 +49,7 @@ for i in range(len(Coordinate_X_Normalized)):
 """
 #X_train, X_test,y_train,y_test= sk.model_selection.train_test_split(X,Y, train_size=0.70)
 #https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_val_score.html
-#Si j'ai bien compris, dans notre cas c "mieux" que train_test_split
+#Si j'ai bien compris, ca randomise pas la selection comme test_train_split
 tocsv_data=pd.DataFrame({"x":[],"precision":[]}) #initialisation a vide pour mettre vers un fichier .csv0w pour les résultats 
 start_time = time.time() #Temps de début pour obtenir tous les résultats
 X_train, X_test,y_train,y_test= sk.model_selection.train_test_split(X,Y, train_size=0.80)
@@ -63,6 +63,8 @@ print('SVM score: %0.3f' % val_acc)
 
 for x in range(1,np.shape(X)[1]+1):
     embedding = MDS(n_components=x)
+    #https://www.researchgate.net/publication/323562545_Dimensionality_reduction_methods_The_comparison_of_speed_and_accuracy
+    #MDS est plus précis
     X_transformed = embedding.fit_transform(X)
     print("Avec le nombre de composants=",x)
     ##Pour évaluer la précision de la réduction, on utilise SVM (Support Vector Machine) sur Iris la précision la plus élevé
