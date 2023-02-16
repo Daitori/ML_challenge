@@ -23,13 +23,11 @@ Y=data.iloc[:,1].astype(int)  ##Val [1 2 3 5 6 7 8] avec 1286 valeurs totals
 Coordinate_X=sk.preprocessing.normalize(data.iloc[:,4:72,])
 Coordinate_Y=sk.preprocessing.normalize(data.iloc[:,72:140,])
 X=(np.concatenate((Coordinate_X,Coordinate_Y),axis=-1))
-
 ##Evaluation des différents models avant features selections
 X_train, X_test,y_train,y_test= sk.model_selection.train_test_split(X,Y, train_size=0.80)
 
 #initialisation a vide pour mettre vers un fichier .csv0w pour les résultats 
 tocsv_data=pd.DataFrame({"Models":[],"precision":[]}) 
-
 
 clf = KNeighborsClassifier(n_neighbors = 5, metric = 'minkowski', p = 2) ##Si les resultats ne sont pas satisfaisante on modifie
 clf.fit(X_train, y_train)
@@ -125,13 +123,51 @@ tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"Models":["MLP Classifier"],"prec
 tocsv_data.to_csv("Test_Result.csv", sep='\t', encoding='utf-8',index=False)
 
 ##On retient les valeurs au dessus de 0.40 on a, 
-# "Random Forest";"Decision Tree entropy";"SVC no linear";"Kernel SVM rbf";"GaussianNB";"AdaBoost Classifier";"KNeighborsClassifier"
+# "Random Forest";"Decision Tree entropy";"SVC no linear"=="Kernel SVM rbf";"GaussianNB";"AdaBoost Classifier";"KNeighborsClassifier"
 # On peut voir à partir des matrice de confusion les classes que les modèles ont du mal
 
 ###Piste essayer de faire quelques chose avec ca
+#Il existe different kernel pour SVC
+tocsv_data2=pd.DataFrame({"Kernel":[],"precision":[]}) 
+
+clf =  (SVC(kernel='poly')).fit(X_train, y_train)
+val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
+preds = clf.predict(X_test)
+val_acc = sk.metrics.accuracy_score(y_test, preds)
+tocsv_data2=pd.concat([tocsv_data2,pd.DataFrame({"Kernel":["poly"],"precision":[val_acc]})])
+
+print(' score: %0.3f' % val_acc)
+
+clf =  (SVC(kernel='linear')).fit(X_train, y_train)
+val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
+preds = clf.predict(X_test)
+val_acc = sk.metrics.accuracy_score(y_test, preds)
+tocsv_data2=pd.concat([tocsv_data2,pd.DataFrame({"Kernel":["linear"],"precision":[val_acc]})])
+
+print(' score: %0.3f' % val_acc)
+
+clf =  (SVC(kernel='sigmoid')).fit(X_train, y_train)
+val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
+preds = clf.predict(X_test)
+val_acc = sk.metrics.accuracy_score(y_test, preds)
+tocsv_data2=pd.concat([tocsv_data2,pd.DataFrame({"Kernel":["sigmoid"],"precision":[val_acc]})])
+
+print(' score: %0.3f' % val_acc)
+
+clf =  (SVC()).fit(X_train, y_train)
+
+val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
+preds = clf.predict(X_test)
+val_acc = sk.metrics.accuracy_score(y_test, preds)
+tocsv_data2=pd.concat([tocsv_data2,pd.DataFrame({"Kernel":["rbf"],"precision":[val_acc]})])
+print(' score: %0.3f' % val_acc)
+
+tocsv_data2.to_csv("Test_Result_SVM_Kernel.csv", sep='\t', encoding='utf-8',index=False)
+
+##On détermine que SVC("poly") est le plus précis sans OnevsRest
 
 #Vers un .csv
-tocsv_data=pd.DataFrame({"Models":[],"precision":[]}) 
+tocsv_data3=pd.DataFrame({"Models":[],"precision":[]}) 
 
 ##On applique "one-against-all" avec les modeles precedent retenu:
 X_train, X_test,y_train,y_test= sk.model_selection.train_test_split(X,Y, train_size=0.80)
@@ -139,37 +175,36 @@ X_train, X_test,y_train,y_test= sk.model_selection.train_test_split(X,Y, train_s
 clf = OneVsRestClassifier(SVC(random_state=0)).fit(X_train, y_train)
 val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
 print(val_acc)
-tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"Models":["SVC normal"],"precision":[val_acc]})])
+tocsv_data3=pd.concat([tocsv_data3,pd.DataFrame({"Models":["SVC normal"],"precision":[val_acc]})])
 
 clf = OneVsRestClassifier((RandomForestClassifier(max_depth=2, random_state=0))).fit(X_train, y_train)
 val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
 print(val_acc)
-tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"Models":["RandomForestClassifier"],"precision":[val_acc]})])
+tocsv_data3=pd.concat([tocsv_data3,pd.DataFrame({"Models":["RandomForestClassifier"],"precision":[val_acc]})])
 
 clf = OneVsRestClassifier(DecisionTreeClassifier(criterion = 'entropy', random_state = 0)).fit(X_train, y_train)
 val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
 print(val_acc)
-tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"Models":["DecisionTreeClassifier"],"precision":[val_acc]})])
-
-clf = OneVsRestClassifier(SVC(kernel = 'rbf', random_state = 0)).fit(X_train, y_train)
-val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
-print(val_acc)
-tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"Models":["Kernel SVM rbf"],"precision":[val_acc]})])
+tocsv_data3=pd.concat([tocsv_data3,pd.DataFrame({"Models":["DecisionTreeClassifier"],"precision":[val_acc]})])
 
 clf = OneVsRestClassifier(GaussianNB()).fit(X_train, y_train)
 val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
 print(val_acc)
-tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"Models":["GaussianNB"],"precision":[val_acc]})])
+tocsv_data3=pd.concat([tocsv_data3,pd.DataFrame({"Models":["GaussianNB"],"precision":[val_acc]})])
 
 clf = OneVsRestClassifier(AdaBoostClassifier()).fit(X_train, y_train)
 val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
 print(val_acc)
-tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"Models":["AdaBoost Classifier"],"precision":[val_acc]})])
+tocsv_data3=pd.concat([tocsv_data3,pd.DataFrame({"Models":["AdaBoost Classifier"],"precision":[val_acc]})])
 
 clf = OneVsRestClassifier(KNeighborsClassifier(n_neighbors = 5, metric = 'minkowski', p = 2)).fit(X_train, y_train)
 val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
 print(val_acc)
-tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"Models":["KNeighborsClassifier"],"precision":[val_acc]})])
+tocsv_data3=pd.concat([tocsv_data3,pd.DataFrame({"Models":["KNeighborsClassifier"],"precision":[val_acc]})])
 
-tocsv_data.to_csv("Test_Result_One-All.csv", sep='\t', encoding='utf-8',index=False)
+clf = OneVsRestClassifier(SVC(kernel="poly",random_state=0)).fit(X_train, y_train)
+val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
+print(val_acc)
+tocsv_data3=pd.concat([tocsv_data3,pd.DataFrame({"Models":["SVC normal"],"precision":[val_acc]})])
 
+tocsv_data3.to_csv("Test_Result_One-All.csv", sep='\t', encoding='utf-8',index=False)
