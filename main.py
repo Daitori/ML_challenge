@@ -5,6 +5,7 @@ from  sklearn.manifold import MDS
 from sklearn.decomposition import PCA
 from sklearn.svm import SVC
 from sklearn.multiclass import OneVsRestClassifier
+from sklearn.model_selection import cross_val_score
 import time
 
 
@@ -22,14 +23,9 @@ Coordinate_X=sk.preprocessing.normalize(data.iloc[:,4:72,])
 Coordinate_Y=sk.preprocessing.normalize(data.iloc[:,72:140,])
 X=(np.concatenate((Coordinate_X,Coordinate_Y),axis=-1))
 
-##Dans evaluation_pred.py on a déterminer quelle modele de pred est le plus précis
-X_train, X_test,Y_train,Y_test= sk.model_selection.train_test_split(X,Y, train_size=0.80)
-
 ##Sans reduction de dimension
-clf = OneVsRestClassifier(SVC(kernel='poly')).fit(X_train, Y_train)
-val_acc=sk.metrics.accuracy_score(Y_test, clf.predict(X_test))
-print('score: %0.3f' % val_acc)
-
+clf = OneVsRestClassifier(SVC(kernel='poly'))
+print('score: %0.3f' % cross_val_score(clf, X, Y).mean())
 
 """#Inutile: mais voila ca fait de quoi écrire pour dire qu'on c trompé initialement
 #C'est pas possible d'avoir des features multi dimentionnel c comme ca, il faut des strings ou des nombres, et la dim doit etre de 2
@@ -54,31 +50,25 @@ for i in range(len(Coordinate_X_Normalized)):
 #X_train, X_test,y_train,y_test= sk.model_selection.train_test_split(X,Y, train_size=0.70)
 #https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_val_score.html
 #Ca depend de la taille des données, je crois
-tocsv_data=pd.DataFrame({"X":[],"Methods":[],"svd_solver":[],"Precision":[]}) #initialisation a vide pour mettre vers un fichier .csv0w pour les résultats 
+tocsv_data=pd.DataFrame({"X":[],"Methods":[],"Precision":[]}) #initialisation a vide pour mettre vers un fichier .csv0w pour les résultats 
 start_time = time.time() #Temps de début pour obtenir tous les résultats
-for x in ["auto","full","arpack","randomized"]: #svd_solver{‘auto’, ‘full’, ‘arpack’, ‘randomized’}, default=’auto’
-    for y in range(1,np.shape(X)[1]): 
-        #embedding = MDS(n_components=x) ##Marche pas avec MDS, fit existe pas
-        pca = PCA(n_components=y,svd_solver=x)
-        #https://www.researchgate.net/publication/323562545_Dimensionality_reduction_methods_The_comparison_of_speed_and_accuracy
+for x in range(1,np.shape(X)[1]): 
+    print("Avec le nombre de features=",x)
+    embedding = MDS(n_components=x)
+    X_transformed_MDS = embedding.fit_transform(X)
+    #https://www.researchgate.net/publication/323562545_Dimensionality_reduction_methods_The_comparison_of_speed_and_accuracy
+    print("Pour MDS:")
+    val_acc=sk.model_selection.cross_val_score(clf, X_transformed_MDS, Y).mean()
+    print('score: %0.3f' %val_acc)
+    tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"X":[x],"Methods":["MDS"],"precision":[val_acc]})])
+    for y in ["auto","full","arpack","randomized"]: #svd_solver{‘auto’, ‘full’, ‘arpack’, ‘randomized’}, default=’auto’
+        pca = PCA(n_components=x,svd_solver=y)
         #MDS est plus précis d'apres le doc
-        print("Avec le nombre de features=",y)
-        #X_train_transformed_MDS = embedding.fit_transform(X_train)
-        X_train_transformed_PCA = pca.fit_transform(X_train)
-        X_test_transformed_PCA = pca.transform(X_test)
-
-        """
-        print("Pour MDS:")
-        val_acc=sk.model_selection.cross_val_score(clf, X_train_transformed_MDS, Y_train).mean()
+        X_transformed_PCA=pca.fit_transform(X)
+        print("Pour PCA:"+y)
+        val_acc=sk.model_selection.cross_val_score(clf, X_transformed_PCA, Y).mean()
         print('score: %0.3f' %val_acc)
-        tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"x":[x],"Methods":["MDS"],"precision":[val_acc]})])
-        """
-        
-        print("Pour PCA:")
-        clf = OneVsRestClassifier(SVC(kernel='poly')).fit(X_train_transformed_PCA, Y_train)
-        val_acc=sk.metrics.accuracy_score(Y_test, clf.predict(X_test_transformed_PCA))
-        print('score: %0.3f' %val_acc)
-        tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"X":[y],"Methods":["PCA"],"svd_solver":[x],"Precision":[val_acc]})])
+        tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"X":[x],"Methods":["PCA "+y],"Precision":[val_acc]})])
         ##Pour évaluer la précision de la réduction, on utilise SVM (Support Vector Machine) sur Iris la précision la plus élevé, avec(kernel="poly")
         #https://www.geeksforgeeks.org/classifier-comparison-in-scikit-learn/
 

@@ -24,99 +24,57 @@ Coordinate_X=sk.preprocessing.normalize(data.iloc[:,4:72,])
 Coordinate_Y=sk.preprocessing.normalize(data.iloc[:,72:140,])
 X=(np.concatenate((Coordinate_X,Coordinate_Y),axis=-1))
 ##Evaluation des différents models avant features selections
-X_train, X_test,y_train,y_test= sk.model_selection.train_test_split(X,Y, train_size=0.80)
 
 #initialisation a vide pour mettre vers un fichier .csv0w pour les résultats 
 tocsv_data=pd.DataFrame({"Models":[],"precision":[]}) 
 
 clf = KNeighborsClassifier(n_neighbors = 5, metric = 'minkowski', p = 2) ##Si les resultats ne sont pas satisfaisante on modifie
-clf.fit(X_train, y_train)
-preds = clf.predict(X_test)
-cm_acc = confusion_matrix(y_test, preds)
-print(cm_acc)
-val_acc = accuracy_score(y_test, preds)
-print('score: %0.3f' % val_acc)
+val_acc=sk.model_selection.cross_val_score(clf, X, Y).mean()
+print('score: %0.3f' %val_acc)
 tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"Models":["KNeighborsClassifier"],"precision":[val_acc]})])
 
 
 clf = SVC(kernel = 'linear', random_state = 0) #SVC linear
-clf.fit(X_train, y_train)
-preds = clf.predict(X_test)
-cm_acc = confusion_matrix(y_test, preds)
-print(cm_acc)
-val_acc = accuracy_score(y_test, preds)
+val_acc=sk.model_selection.cross_val_score(clf, X, Y).mean()
 print(' score: %0.3f' % val_acc)
 tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"Models":["SVC linear"],"precision":[val_acc]})])
 
-clf = SVC(random_state = 0)  #SVC non linear
-clf.fit(X_train, y_train)
-preds = clf.predict(X_test)
-cm_acc = confusion_matrix(y_test, preds)
-print(cm_acc)
-val_acc = sk.metrics.accuracy_score(y_test, preds)
-print(' score: %0.3f' % val_acc)
-tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"Models":["SVC no linear"],"precision":[val_acc]})])
-
 clf = SVC(kernel = 'rbf', random_state = 0) # Kernel SVM rbf
-clf.fit(X_train, y_train)
-preds = clf.predict(X_test)
-cm_acc = confusion_matrix(y_test, preds)
-print(cm_acc)
-val_acc = sk.metrics.accuracy_score(y_test, preds)
+val_acc=sk.model_selection.cross_val_score(clf, X, Y).mean()
 print(' score: %0.3f' % val_acc)
 tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"Models":["Kernel SVM rbf"],"precision":[val_acc]})])
 
 clf = GaussianNB()
-clf.fit(X_train, y_train)
-preds = clf.predict(X_test)
-cm_acc = confusion_matrix(y_test, preds)
-print(cm_acc)
-val_acc = sk.metrics.accuracy_score(y_test, preds)
+val_acc=sk.model_selection.cross_val_score(clf, X, Y).mean()
 print(' score: %0.3f' % val_acc)
 tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"Models":["GaussianNB"],"precision":[val_acc]})])
 
-clf = DecisionTreeClassifier(criterion = 'entropy', random_state = 0)
-clf.fit(X_train, y_train)
-preds = clf.predict(X_test)
-cm_acc = confusion_matrix(y_test, preds)
-print(cm_acc)
-val_acc = sk.metrics.accuracy_score(y_test, preds)
+clf = DecisionTreeClassifier(criterion = 'entropy')
+val_acc=sk.model_selection.cross_val_score(clf, X, Y).mean()
 print(' score: %0.3f' % val_acc)
 tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"Models":["Decision Tree entropy"],"precision":[val_acc]})])
 
-clf =RandomForestClassifier(max_depth=2, random_state=0)
-clf.fit(X_train, y_train)
-preds = clf.predict(X_test)
-cm_acc = confusion_matrix(y_test, preds)
-print(cm_acc)
-val_acc = sk.metrics.accuracy_score(y_test, preds)
+clf =RandomForestClassifier(max_depth=2,   )
+val_acc=sk.model_selection.cross_val_score(clf, X, Y).mean()
+
 print(' score: %0.3f' % val_acc)
 tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"Models":["Random Forest"],"precision":[val_acc]})])
 
 clf = AdaBoostClassifier()
-clf.fit(X_train, y_train)
-preds = clf.predict(X_test)
-cm_acc = confusion_matrix(y_test, preds)
-print(cm_acc)
-val_acc = sk.metrics.accuracy_score(y_test, preds)
+val_acc=sk.model_selection.cross_val_score(clf, X, Y).mean()
+
 print(' score: %0.3f' % val_acc)
 tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"Models":["AdaBoost Classifier"],"precision":[val_acc]})])
 
 clf = QuadraticDiscriminantAnalysis()
-clf.fit(X_train, y_train)
-preds = clf.predict(X_test)
-cm_acc = confusion_matrix(y_test, preds)
-print(cm_acc)
-val_acc = sk.metrics.accuracy_score(y_test, preds)
+val_acc=sk.model_selection.cross_val_score(clf, X, Y).mean()
+
 print(' score: %0.3f' % val_acc)
 tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"Models":["Quadratic Discriminant Analysis"],"precision":[val_acc]})])
 
 clf = MLPClassifier(alpha=1, max_iter=1000)
-clf.fit(X_train, y_train)
-preds = clf.predict(X_test)
-cm_acc = confusion_matrix(y_test, preds)
-print(cm_acc)
-val_acc = sk.metrics.accuracy_score(y_test, preds)
+val_acc=sk.model_selection.cross_val_score(clf, X, Y).mean()
+
 print(' score: %0.3f' % val_acc)
 tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"Models":["MLP Classifier"],"precision":[val_acc]})])
 
@@ -130,35 +88,29 @@ tocsv_data.to_csv("Test_Result.csv", sep='\t', encoding='utf-8',index=False)
 #Il existe different kernel pour SVC
 tocsv_data2=pd.DataFrame({"Kernel":[],"precision":[]}) 
 
-clf =  (SVC(kernel='poly')).fit(X_train, y_train)
-val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
-preds = clf.predict(X_test)
-val_acc = sk.metrics.accuracy_score(y_test, preds)
+clf =  (SVC(kernel='poly'))
+val_acc=sk.model_selection.cross_val_score(clf, X, Y).mean()
 tocsv_data2=pd.concat([tocsv_data2,pd.DataFrame({"Kernel":["poly"],"precision":[val_acc]})])
 
 print(' score: %0.3f' % val_acc)
 
-clf =  (SVC(kernel='linear')).fit(X_train, y_train)
-val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
-preds = clf.predict(X_test)
-val_acc = sk.metrics.accuracy_score(y_test, preds)
+clf =  (SVC(kernel='linear'))
+val_acc=sk.model_selection.cross_val_score(clf, X, Y).mean()
 tocsv_data2=pd.concat([tocsv_data2,pd.DataFrame({"Kernel":["linear"],"precision":[val_acc]})])
 
 print(' score: %0.3f' % val_acc)
 
-clf =  (SVC(kernel='sigmoid')).fit(X_train, y_train)
-val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
-preds = clf.predict(X_test)
-val_acc = sk.metrics.accuracy_score(y_test, preds)
+clf =  (SVC(kernel='sigmoid'))
+val_acc=sk.model_selection.cross_val_score(clf, X, Y).mean()
+
 tocsv_data2=pd.concat([tocsv_data2,pd.DataFrame({"Kernel":["sigmoid"],"precision":[val_acc]})])
 
 print(' score: %0.3f' % val_acc)
 
-clf =  (SVC()).fit(X_train, y_train)
+clf =  (SVC())
 
-val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
-preds = clf.predict(X_test)
-val_acc = sk.metrics.accuracy_score(y_test, preds)
+val_acc=sk.model_selection.cross_val_score(clf, X, Y).mean()
+
 tocsv_data2=pd.concat([tocsv_data2,pd.DataFrame({"Kernel":["rbf"],"precision":[val_acc]})])
 print(' score: %0.3f' % val_acc)
 
@@ -170,41 +122,45 @@ tocsv_data2.to_csv("Test_Result_SVM_Kernel.csv", sep='\t', encoding='utf-8',inde
 tocsv_data3=pd.DataFrame({"Models":[],"precision":[]}) 
 
 ##On applique "one-against-all" avec les modeles precedent retenu:
-X_train, X_test,y_train,y_test= sk.model_selection.train_test_split(X,Y, train_size=0.80)
 
-clf = OneVsRestClassifier(SVC(random_state=0)).fit(X_train, y_train)
-val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
+clf = OneVsRestClassifier(SVC())
+val_acc=sk.model_selection.cross_val_score(clf, X, Y).mean()
 print(val_acc)
-tocsv_data3=pd.concat([tocsv_data3,pd.DataFrame({"Models":["SVC normal"],"precision":[val_acc]})])
+tocsv_data3=pd.concat([tocsv_data3,pd.DataFrame({"Models":["SVC rbf"],"precision":[val_acc]})])
 
-clf = OneVsRestClassifier((RandomForestClassifier(max_depth=2, random_state=0))).fit(X_train, y_train)
-val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
+clf = OneVsRestClassifier((RandomForestClassifier(max_depth=2)))
+val_acc=sk.model_selection.cross_val_score(clf, X, Y).mean()
+
 print(val_acc)
 tocsv_data3=pd.concat([tocsv_data3,pd.DataFrame({"Models":["RandomForestClassifier"],"precision":[val_acc]})])
 
-clf = OneVsRestClassifier(DecisionTreeClassifier(criterion = 'entropy', random_state = 0)).fit(X_train, y_train)
-val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
+clf = OneVsRestClassifier(DecisionTreeClassifier(criterion = 'entropy', random_state = 0))
+val_acc=sk.model_selection.cross_val_score(clf, X, Y).mean()
+
 print(val_acc)
 tocsv_data3=pd.concat([tocsv_data3,pd.DataFrame({"Models":["DecisionTreeClassifier"],"precision":[val_acc]})])
 
-clf = OneVsRestClassifier(GaussianNB()).fit(X_train, y_train)
-val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
+clf = OneVsRestClassifier(GaussianNB())
+val_acc=sk.model_selection.cross_val_score(clf, X, Y).mean()
+
 print(val_acc)
 tocsv_data3=pd.concat([tocsv_data3,pd.DataFrame({"Models":["GaussianNB"],"precision":[val_acc]})])
 
-clf = OneVsRestClassifier(AdaBoostClassifier()).fit(X_train, y_train)
-val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
+clf = OneVsRestClassifier(AdaBoostClassifier())
+val_acc=sk.model_selection.cross_val_score(clf, X, Y).mean()
+
 print(val_acc)
 tocsv_data3=pd.concat([tocsv_data3,pd.DataFrame({"Models":["AdaBoost Classifier"],"precision":[val_acc]})])
 
-clf = OneVsRestClassifier(KNeighborsClassifier(n_neighbors = 5, metric = 'minkowski', p = 2)).fit(X_train, y_train)
-val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
+clf = OneVsRestClassifier(KNeighborsClassifier(n_neighbors = 5, metric = 'minkowski', p = 2))
+val_acc=sk.model_selection.cross_val_score(clf, X, Y).mean()
+
 print(val_acc)
 tocsv_data3=pd.concat([tocsv_data3,pd.DataFrame({"Models":["KNeighborsClassifier"],"precision":[val_acc]})])
 
-clf = OneVsRestClassifier(SVC(kernel="poly",random_state=0)).fit(X_train, y_train)
-val_acc=sk.metrics.accuracy_score(y_test, clf.predict(X_test))
+clf = OneVsRestClassifier(SVC(kernel="poly"))
+val_acc=sk.model_selection.cross_val_score(clf, X, Y).mean()
 print(val_acc)
-tocsv_data3=pd.concat([tocsv_data3,pd.DataFrame({"Models":["SVC normal"],"precision":[val_acc]})])
+tocsv_data3=pd.concat([tocsv_data3,pd.DataFrame({"Models":["SVC poly"],"precision":[val_acc]})])
 
 tocsv_data3.to_csv("Test_Result_One-All.csv", sep='\t', encoding='utf-8',index=False)
