@@ -9,12 +9,7 @@ from sklearn.model_selection import cross_val_score
 import time
 
 
-<<<<<<< HEAD
 data=pd.read_csv(r"training_data.csv",sep=",") ##Change localisation du .csv si c'est pas pareil
-=======
-data=pd.read_csv(r"Challenge\training_data.csv",sep=",") ##Change localisation du .csv si c'est pas pareil
-
->>>>>>> 858741b5249f3b725ca94ea5c73e079769a26dfe
 Y=data.iloc[:,1].astype(int) 
 ##Val [1 2 3 5 6 7 8] avec 1286 valeurs totals
 #[1:173;2:171;3:194;5:198;6:181;7:189;8:180] +- équilibré la répartion des classes
@@ -83,7 +78,6 @@ for x in range(1,50):
         print("Pour PCA:"+y)
         val_acc=sk.model_selection.cross_val_score(clf, X_transformed_PCA, Y).mean()
         print('score: %0.3f' %val_acc)
-<<<<<<< HEAD
         tocsv_data_pca=pd.concat([tocsv_data_pca,pd.DataFrame({"X":[x],"Methods":[y],"Precision":[val_acc]})])
         ##Pour évaluer la précision de la réduction, on utilise SVM (Support Vector Machine) sur Iris la précision la plus élevé, avec(kernel="poly")
         #https://www.geeksforgeeks.org/classifier-comparison-in-scikit-learn/
@@ -92,10 +86,3 @@ for x in range(1,50):
 #tocsv_data_pca.to_csv("Reduction_Result_PCA.csv", sep=' ', encoding='utf-8',index=False)
 tocsv_data_mds.to_csv("Reduction_Result_MDS.csv", sep=' ', encoding='utf-8',index=False)
 """
-=======
-        tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"X":[x],"Methods":["PCA "+y],"Precision":[val_acc]})])
-
-
-print(time.time()-start_time) #Temps pour obtenir résultat
-tocsv_data.to_csv("Reduction_Result.csv", sep='\t', encoding='utf-8',index=False)
->>>>>>> 858741b5249f3b725ca94ea5c73e079769a26dfe
