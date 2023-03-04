@@ -9,58 +9,68 @@ from sklearn.model_selection import cross_val_score
 import time
 
 
-data=pd.read_csv(r"Challenge\training_data.csv",sep=",") ##Change localisation du .csv si c'est pas pareil
-
-##J'avais des resultats de pred faible - de 0.5, j'ai tenté de faire similaire
-#https://stackoverflow.com/questions/39167586/scikit-very-low-accuracy-on-classifiersnaive-bayes-decissiontreeclassifier
-#Pas le meme probleme
+data=pd.read_csv(r"training_data.csv",sep=",") ##Change localisation du .csv si c'est pas pareil
 Y=data.iloc[:,1].astype(int) 
 ##Val [1 2 3 5 6 7 8] avec 1286 valeurs totals
 #[1:173;2:171;3:194;5:198;6:181;7:189;8:180] +- équilibré la répartion des classes
+##Plus précis de normaliser les X et les Y à part (0,01 de plus)
+Coordinate_X=sk.preprocessing.normalize(data.iloc[:,4:72,]) #Normalisation des données selon X
+Coordinate_Y=sk.preprocessing.normalize(data.iloc[:,72:140,]) #Normalisation des données selon Y
 
-##Plus précis de normaliser les X et les Y à part
-Coordinate_X=sk.preprocessing.normalize(data.iloc[:,4:72,])
-Coordinate_Y=sk.preprocessing.normalize(data.iloc[:,72:140,])
-X=(np.concatenate((Coordinate_X,Coordinate_Y),axis=-1))
 
 ##Sans reduction de dimension
+
+X=pd.DataFrame(sk.preprocessing.normalize(data.iloc[:,4:140,])) #Normalisation des données selon X et Y
+
 clf = OneVsRestClassifier(SVC(kernel='poly'))
 print('score: %0.3f' % cross_val_score(clf, X, Y).mean())
 
-"""#Inutile: mais voila ca fait de quoi écrire pour dire qu'on c trompé initialement
-#C'est pas possible d'avoir des features multi dimentionnel c comme ca, il faut des strings ou des nombres, et la dim doit etre de 2
-Coordinate_X=data[:,4:72,]
-print(Coordinate_X.shape)
-Coordinate_X_Normalized=preprocessing.normalize(Coordinate_X)
-Coordinate_Y=data[:,72:140,]
-Coordinate_Y_Normalized=preprocessing.normalize(Coordinate_Y)
-X = []
-for i in range(len(Coordinate_X_Normalized)):
-    L = []
-    for j in range(len(Coordinate_X_Normalized[i])):
-        L.append([Coordinate_X_Normalized[i][j], Coordinate_Y_Normalized[i][j]])
-    X.append(L)
-#Taille obtenus (1286,68,2) comme on a 68 coordonnées avec X Y, logique mais c pour les humains pas pour les algos
-#Il faut donc (1286,136) (X,Y séparé c des features "indépendentes")
+X_train, X_test,y_train,y_test= sk.model_selection.train_test_split(X,Y, train_size=0.70,random_state=0)
+clf.fit(X_train,y_train)
+print("Score sur le test set: %0.3f" % clf.score(X_test,y_test))
+#score: 0.761
+#Score sur le test set: 0.718
+
+X=pd.DataFrame(np.concatenate((Coordinate_X,Coordinate_Y),axis=-1)) #Concaténation des données normalisées selon X et Y séparément
+
+#https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_val_score.html
+clf = OneVsRestClassifier(SVC(kernel='poly'))
+print('score: %0.3f' % cross_val_score(clf, X, Y).mean())
+
+X_train, X_test,y_train,y_test= sk.model_selection.train_test_split(X,Y, train_size=0.70,random_state=0)
+clf.fit(X_train,y_train)
+print("Score sur le test set: %0.3f" % clf.score(X_test,y_test))
+
+#score: 0.754
+#Score sur le test set: 0.746
+
+csv_predict=pd.DataFrame({"label":[]}) #initialisation a vide pour mettre vers un fichier .csv pour les résultats 
+data_predict=pd.read_csv(r"data.csv",sep=",")
+X=pd.DataFrame(np.concatenate((sk.preprocessing.normalize(data_predict.loc[:,'x_0':'x_67']),sk.preprocessing.normalize(data_predict.loc[:,'y_0':'y_67'])),axis=-1))
+Y=pd.DataFrame({"label":clf.predict(X).astype(int)})
+csv_predict=pd.concat([csv_predict,Y])
+csv_predict.to_csv("result.csv",index=False)
+
 """
-
-
 ##Avec reduction de dimension non fonctionnel
 
-#X_train, X_test,y_train,y_test= sk.model_selection.train_test_split(X,Y, train_size=0.70)
-#https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_val_score.html
-#Ca depend de la taille des données, je crois
-tocsv_data=pd.DataFrame({"X":[],"Methods":[],"Precision":[]}) #initialisation a vide pour mettre vers un fichier .csv0w pour les résultats 
-start_time = time.time() #Temps de début pour obtenir tous les résultats
-for x in range(1,np.shape(X)[1]): 
+#tocsv_data_pca=pd.DataFrame({"X":[],"Methods":[],"Precision":[]}) #initialisation a vide pour mettre vers un fichier .csv pour les résultats 
+tocsv_data_mds=pd.DataFrame({"X":[],"Methods":[],"Precision":[]}) #initialisation a vide pour mettre vers un fichier .csv pour les résultats 
+##start_time = time.time() #Temps de début pour obtenir tous les résultats
+X_train, X_test,y_train,y_test= sk.model_selection.train_test_split(X,Y, train_size=0.70)
+clf = OneVsRestClassifier(SVC(kernel='poly'))
+
+for x in range(1,50): 
     print("Avec le nombre de features=",x)
     embedding = MDS(n_components=x)
-    X_transformed_MDS = embedding.fit_transform(X)
+    X_train_transformed_MDS = embedding.fit_transform(X_train)
+    X_test_transformed_MDS = embedding.fit_transform(X_test)
+    clf.fit(X_train_transformed_MDS,y_train)
     #https://www.researchgate.net/publication/323562545_Dimensionality_reduction_methods_The_comparison_of_speed_and_accuracy
     print("Pour MDS:")
-    val_acc=sk.model_selection.cross_val_score(clf, X_transformed_MDS, Y).mean()
+    val_acc=clf.score(X_test_transformed_MDS,y_test)
     print('score: %0.3f' %val_acc)
-    tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"X":[x],"Methods":["MDS"],"precision":[val_acc]})])
+    tocsv_data_mds=pd.concat([tocsv_data_mds,pd.DataFrame({"X":[x],"Methods":["MDS"],"Precision":[val_acc]})])
     for y in ["auto","full","arpack","randomized"]: #svd_solver{‘auto’, ‘full’, ‘arpack’, ‘randomized’}, default=’auto’
         pca = PCA(n_components=x,svd_solver=y)
         #MDS est plus précis d'apres le doc
@@ -68,9 +78,11 @@ for x in range(1,np.shape(X)[1]):
         print("Pour PCA:"+y)
         val_acc=sk.model_selection.cross_val_score(clf, X_transformed_PCA, Y).mean()
         print('score: %0.3f' %val_acc)
-        tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"X":[x],"Methods":["PCA "+y],"Precision":[val_acc]})])
+        tocsv_data_pca=pd.concat([tocsv_data_pca,pd.DataFrame({"X":[x],"Methods":[y],"Precision":[val_acc]})])
         ##Pour évaluer la précision de la réduction, on utilise SVM (Support Vector Machine) sur Iris la précision la plus élevé, avec(kernel="poly")
         #https://www.geeksforgeeks.org/classifier-comparison-in-scikit-learn/
-
-print(time.time()-start_time) #Temps pour obtenir résultat
-tocsv_data.to_csv("Reduction_Result.csv", sep='\t', encoding='utf-8',index=False)
+    
+#print(time.time()-start_time) #Temps pour obtenir résultat
+#tocsv_data_pca.to_csv("Reduction_Result_PCA.csv", sep=' ', encoding='utf-8',index=False)
+tocsv_data_mds.to_csv("Reduction_Result_MDS.csv", sep=' ', encoding='utf-8',index=False)
+"""

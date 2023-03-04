@@ -9,7 +9,6 @@ import pathlib
 batch_size = 32
 img_height = 180
 img_width = 180
-normalization_layer = layers.Rescaling(1./255)
 epochs=16
 ##Val [1 2 3 5 6 7 8] avec 1286 valeurs totals
 #[1:173;2:171;3:194;5:198;6:181;7:189;8:180] +- équilibré la répartion des classes
@@ -22,7 +21,7 @@ val_ds = tf.keras.utils.image_dataset_from_directory(data_dir,validation_split=0
   subset="validation",seed=123,image_size=(img_height, img_width),batch_size=batch_size)
 
 class_names = train_ds.class_names
-
+normalization_layer = layers.Rescaling(1./255)
 AUTOTUNE = tf.data.AUTOTUNE
 train_ds = train_ds.cache().shuffle(1000).prefetch(buffer_size=AUTOTUNE)
 val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
@@ -73,6 +72,7 @@ for x in ['adam','sgd','rmsprop','adagrad','adadelta','adamax','nadam','ftrl']:
     val_acc = history.history['val_accuracy']
     loss = history.history['loss']
     val_loss = history.history['val_loss']
+
     epochs_range = range(epochs)
     plt.figure(figsize=(8, 8))
     plt.subplot(1, 2, 1)
