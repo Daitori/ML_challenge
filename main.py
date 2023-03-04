@@ -11,9 +11,6 @@ import time
 
 data=pd.read_csv(r"Challenge\training_data.csv",sep=",") ##Change localisation du .csv si c'est pas pareil
 
-##J'avais des resultats de pred faible - de 0.5, j'ai tenté de faire similaire
-#https://stackoverflow.com/questions/39167586/scikit-very-low-accuracy-on-classifiersnaive-bayes-decissiontreeclassifier
-#Pas le meme probleme
 Y=data.iloc[:,1].astype(int) 
 ##Val [1 2 3 5 6 7 8] avec 1286 valeurs totals
 #[1:173;2:171;3:194;5:198;6:181;7:189;8:180] +- équilibré la répartion des classes
@@ -69,8 +66,7 @@ for x in range(1,np.shape(X)[1]):
         val_acc=sk.model_selection.cross_val_score(clf, X_transformed_PCA, Y).mean()
         print('score: %0.3f' %val_acc)
         tocsv_data=pd.concat([tocsv_data,pd.DataFrame({"X":[x],"Methods":["PCA "+y],"Precision":[val_acc]})])
-        ##Pour évaluer la précision de la réduction, on utilise SVM (Support Vector Machine) sur Iris la précision la plus élevé, avec(kernel="poly")
-        #https://www.geeksforgeeks.org/classifier-comparison-in-scikit-learn/
+
 
 print(time.time()-start_time) #Temps pour obtenir résultat
 tocsv_data.to_csv("Reduction_Result.csv", sep='\t', encoding='utf-8',index=False)
